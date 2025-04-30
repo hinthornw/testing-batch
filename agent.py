@@ -1,6 +1,8 @@
 from langchain_openai import ChatOpenAI
 from langgraph.graph import START, END, StateGraph
 from typing import TypedDict, Annotated
+import langsmith as ls
+
 
 def reduce(a, b):
     if a is None:
@@ -10,12 +12,16 @@ def reduce(a, b):
 
 
 async def complaints_log(state):
-    llm = ChatOpenAI()
-    await llm.ainvoke("Hey")
+    llm = ChatOpenAI(model="gpt-4.1-mini", seed=1)
+    try:
+        await llm.ainvoke("Hey")
+    except Exception as e:
+        ls.get_current_run_tree().error = repr(e)
+        print(e)
 
 
 class State1(TypedDict):
-   data: Annotated[dict, reduce]
+    data: Annotated[dict, reduce]
 
 
 graph0 = StateGraph(State1)
@@ -37,12 +43,13 @@ graph1 = graph1.compile()
 
 
 async def process_rows(state):
-    rows = [{"data": r} for r in state['rows']]
+    rows = [{"data": r} for r in state["rows"]]
     print(rows)
-    await graph1.abatch(rows, config={"max_concurrency": 30})
+    await graph1.abatch(rows, config={"max_concurrency": 150})
+
 
 class State2(TypedDict):
-   rows: list
+    rows: list[dict]
 
 
 graph2 = StateGraph(State2)
