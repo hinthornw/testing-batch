@@ -2,7 +2,7 @@ from langchain_openai import ChatOpenAI
 from langgraph.graph import START, END, StateGraph
 from typing import TypedDict, Annotated
 import langsmith as ls
-
+import asyncio
 
 def reduce(a, b):
     if a is None:
@@ -14,7 +14,7 @@ def reduce(a, b):
 async def complaints_log(state):
     llm = ChatOpenAI(model="gpt-4.1-mini", seed=1)
     try:
-        await llm.ainvoke("Hey")
+        await asyncio.sleep(0.5)
     except Exception as e:
         ls.get_current_run_tree().error = repr(e)
         print(e)
